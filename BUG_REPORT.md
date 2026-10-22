@@ -15,3 +15,11 @@
 3. **Expected vs. Actual Result:** Expected: login verifies the provided password against the stored bcrypt hash and issues a token on a match. Actual: login compared the plaintext password directly to the bcrypt hash, so valid credentials were rejected.
 4. **Severity & Evidence:** **High.** All users with bcrypt-hashed passwords were unable to authenticate through this login flow. The issue was confirmed by code inspection; no screenshot or database error was captured.
 5. **Fix & Verification Status:** **Fixed & Verified.** Login now uses `bcrypt.compare` to verify the plaintext password against `user.passwordHash`, and the temporary match logging was removed. Syntax and bcrypt comparison checks passed; no database-backed login was run.
+
+## Authentication middleware
+
+1. **Bug ID & Title:** CM-BUG-003 — Invalid JWTs pass authentication middleware
+2. **Location & Steps to Reproduce:** `src/middlewares/authMiddleware.js` and `src/controllers/auth.controller.js`. Send a request to `GET /api/auth/me` with a malformed, expired, or otherwise invalid `Authorization` token.
+3. **Expected vs. Actual Result:** Expected: authentication middleware returns `401 Unauthorized` and stops the request. Actual: JWT verification errors called `next()` without setting `req.user`; the `/me` controller then accessed `req.user.id` and threw `TypeError: Cannot read properties of undefined (reading 'id')`.
+4. **Severity & Evidence:** **Medium.** Invalid credentials caused an unhandled controller error instead of a clear authentication response. The reported stack trace and the middleware's catch branch confirm the path.
+5. **Fix & Verification Status:** **Fixed & Verified.** Invalid or expired JWTs now receive `401`; decoded tokens without an ID are also rejected, and the stray user-ID console log was removed. Middleware behavior and JavaScript syntax checks passed.
