@@ -5,14 +5,14 @@ const enrollCourse = async (studentId, courseId, batchId = null) => {
   const course = await Course.findById(courseId);
   if (!course) throw new Error("Course not found");
 
-  // Check if already enrolled
+  // Reject duplicate enrollments
   let enrollment = await Enrollment.findOne({
     student: studentId,
     course: courseId,
   });
 
-  if (!enrollment) {
-    // Inverted logic bug: throws error when NOT enrolled
+
+  if (enrollment) {
     throw new Error("Already enrolled in this course");
   }
 

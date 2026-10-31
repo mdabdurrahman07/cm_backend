@@ -23,3 +23,11 @@
 3. **Expected vs. Actual Result:** Expected: authentication middleware returns `401 Unauthorized` and stops the request. Actual: JWT verification errors called `next()` without setting `req.user`; the `/me` controller then accessed `req.user.id` and threw `TypeError: Cannot read properties of undefined (reading 'id')`.
 4. **Severity & Evidence:** **Medium.** Invalid credentials caused an unhandled controller error instead of a clear authentication response. The reported stack trace and the middleware's catch branch confirm the path.
 5. **Fix & Verification Status:** **Fixed & Verified.** Invalid or expired JWTs now receive `401`; decoded tokens without an ID are also rejected, and the stray user-ID console log was removed. Middleware behavior and JavaScript syntax checks passed.
+
+## Enrollment
+
+1. **Bug ID & Title:** CM-BUG-004 — New course enrollments are rejected
+2. **Location & Steps to Reproduce:** `src/services/enrollment.service.js`, `enrollCourse`. Ensure a course exists and the student has no enrollment record for it, then request enrollment in that course.
+3. **Expected vs. Actual Result:** Expected: a student without an existing enrollment can enroll, while a duplicate enrollment is rejected. Actual: the service threw `"Already enrolled in this course"` when no enrollment existed, preventing new enrollments.
+4. **Severity & Evidence:** **High.** Students could not enroll in courses through this service unless an enrollment already existed. The inverted enrollment check confirms the behavior.
+5. **Fix & Verification Status:** **Fixed.** The duplicate-enrollment guard now throws only when an enrollment record exists. JavaScript syntax validation passed; no database-backed enrollment flow was run.
