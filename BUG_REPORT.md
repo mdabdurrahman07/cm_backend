@@ -31,3 +31,19 @@
 3. **Expected vs. Actual Result:** Expected: a student without an existing enrollment can enroll, while a duplicate enrollment is rejected. Actual: the service threw `"Already enrolled in this course"` when no enrollment existed, preventing new enrollments.
 4. **Severity & Evidence:** **High.** Students could not enroll in courses through this service unless an enrollment already existed. The inverted enrollment check confirms the behavior.
 5. **Fix & Verification Status:** **Fixed.** The duplicate-enrollment guard now throws only when an enrollment record exists. JavaScript syntax validation passed; no database-backed enrollment flow was run.
+
+## Quiz submission
+
+1. **Bug ID & Title:** CM-BUG-005 — Quiz scores report incorrect percentages and accept invalid answers
+2. **Location & Steps to Reproduce:** `src/services/quiz.service.js`, `submitQuiz`. Submit answers to a quiz and inspect the returned `percent`; also try a missing/non-array answer list or an option index outside the question's options.
+3. **Expected vs. Actual Result:** Expected: percentage is calculated on a 0–100 scale and submitted answers are valid option indices. Actual: the service multiplied the score ratio by 10, reporting a maximum of 10 instead of 100; it also accepted malformed or out-of-range answers, which could be stored and scored incorrectly.
+4. **Severity & Evidence:** **Medium.** Incorrect percentages affect submission results and quiz statistics, while invalid answers can produce misleading persisted scores. The calculation and missing answer validation were confirmed by code inspection.
+5. **Fix & Verification Status:** **Fixed.** Percentage calculation now uses a 100-point scale, and submissions validate the answer array and each provided option index. Syntax checks and focused service-level checks passed; no database-backed submission was run.
+
+## Admin service
+
+1. **Bug ID & Title:** CM-BUG-006 — Admin assignment filters are ignored and updates bypass schema validation
+2. **Location & Steps to Reproduce:** `src/controllers/admin.controller.js` and `src/services/admin.service.js`. Request `GET /api/admin/assignments?courseId=<id>` or update a course/assignment with a value that violates its Mongoose schema.
+3. **Expected vs. Actual Result:** Expected: assignment filtering applies to the stored `course` field and invalid updates are rejected. Actual: the service filtered on nonexistent `courseId`, while the controller did not forward query parameters; update operations also omitted Mongoose's `runValidators` option.
+4. **Severity & Evidence:** **Medium.** Admins could not filter assignment submissions by course, and invalid schema values could be persisted through update endpoints. The filter/schema mismatch and default update-validator behavior were confirmed by code inspection.
+5. **Fix & Verification Status:** **Fixed.** The controller now forwards query parameters, assignment queries filter by `course`, and course/assignment updates run schema validators. Syntax checks and focused service checks passed; no database-backed admin requests were run.

@@ -23,6 +23,20 @@ const submitQuiz = async (studentId, payload) => {
   }
   if (!quiz) throw new Error("Lesson not found");
   if (quiz.length === 0) throw new Error("No quiz in this lesson");
+  if (!Array.isArray(answers)) throw new Error("Answers must be an array");
+  if (answers.length > quiz.length) {
+    throw new Error("Answers cannot exceed the number of quiz questions");
+  }
+  if (
+    answers.some(
+      (answer, index) =>
+        !Number.isInteger(answer) ||
+        answer < 0 ||
+        answer >= (quiz[index].options || []).length
+    )
+  ) {
+    throw new Error("Each answer must be a valid option index");
+  }
 
   let score = 0;
   quiz.forEach((q, i) => {
@@ -30,8 +44,7 @@ const submitQuiz = async (studentId, payload) => {
   });
 
   const total = quiz.length;
-  // Code-4 bug: multiplied by 10 instead of 100
-  const percent = Math.round((score / total) * 10);
+  const percent = Math.round((score / total) * 100);
 
   // Check if student already submitted this quiz (optional - allow retakes)
   // If you want to prevent duplicates, uncomment the following:
